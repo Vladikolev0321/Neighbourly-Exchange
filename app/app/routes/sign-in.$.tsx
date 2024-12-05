@@ -5,7 +5,7 @@ export default function Home() {
 
   if (!user) {
     return (
-      <div className='flex items-center min-h-screen bg-grey-100'>
+      <div className='flex items-center justify-center min-h-screen bg-grey-100'>
         <SignIn />
       </div>
       );
