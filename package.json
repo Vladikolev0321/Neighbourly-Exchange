@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "pg": "^8.13.1",
+    "pg-promise": "^11.10.2"
+  },
+  "devDependencies": {
+    "prisma": "^6.0.0"
+  },
+  "scripts":{
+    "dev": "remix dev"
+  }
+}
