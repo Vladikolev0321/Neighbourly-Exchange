@@ -11,10 +11,11 @@ model User {
   id        Int      @id @default(autoincrement())
   username  String
   role      String
-  password  String   @unique
+  password  String?   @unique
   email     String   @unique
   name      String?
   createdAt DateTime @default(now())
+  clerkUserId  String @unique
 }
 
 model item {
@@ -24,4 +25,10 @@ model item {
   ownerId     Int
   categoryId  Int
   creatorName String
+  type         String   // Should hold values like "Item" or "Favor"
+  imageUrl     String?  // Nullable to account for optional image upload
+  phone        String
+  neighborhood String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
