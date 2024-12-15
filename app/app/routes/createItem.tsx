@@ -1,15 +1,15 @@
-// app/routes/create-item.tsx
 import React, { useState } from "react";
 import { ActionFunctionArgs, json, redirect } from "@remix-run/node"; // For handling the action
 import { prisma } from "../../prisma/db.server"; // Adjust the path to your Prisma setup
 import { Form, useActionData } from "@remix-run/react"; // For managing form submission states
 
-interface ActionData{
-  error:string;
+interface ActionData {
+  error: string;
+  success: string; // Added success message for successful item creation
 }
 
 // Define the Action Function
-export const action = async({ request }: ActionFunctionArgs)=> {
+export const action = async ({ request }: ActionFunctionArgs) => {
   // Parse the form data
   const formData = await request.formData();
 
@@ -23,18 +23,35 @@ export const action = async({ request }: ActionFunctionArgs)=> {
   const categoryId = 1; // Set based on your app's logic
   const creatorName = "Your Name"; // Replace with the actual user's name if required
 
-
-  
   // Validate the required fields
   if (!name || !type || !phone || !neighborhood || !description) {
     return json({ error: "All fields are required!" }, { status: 400 });
   }
 
-  // If image was uploaded, handle storing the image and getting its URL (implementation not shown)
-  let imageUrl = null;
+  // If image was uploaded, handle storing the image and getting its URL
+  let imageUrl = "";
   if (image) {
-    // Example: Upload image to a cloud storage service and set `imageUrl`
-    imageUrl = "/path/to/stored/image"; // Replace this with actual storage logic
+    // Upload image to Cloudinary
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET; // Cloudinary upload preset
+
+    const cloudinaryFormData = new FormData();
+    cloudinaryFormData.append("file", image);
+    cloudinaryFormData.append("upload_preset", uploadPreset as string);
+
+    const uploadResponse = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      {
+        method: "POST",
+        body: cloudinaryFormData,
+      }
+    );
+
+    const uploadData = await uploadResponse.json();
+        if (uploadData.error) {
+      return json({ error: uploadData.error.message }, { status: 400 });
+    }
+    imageUrl = uploadData.secure_url;
   }
 
   // Save the data into the database
@@ -46,7 +63,7 @@ export const action = async({ request }: ActionFunctionArgs)=> {
         type,
         phone,
         neighborhood,
-        imageUrl,
+        imageUrl, // Store the image URL here
         ownerId,
         categoryId,
         creatorName,
@@ -54,7 +71,7 @@ export const action = async({ request }: ActionFunctionArgs)=> {
     });
 
     // Redirect to a success page or items list
-    return redirect("/");
+    return redirect("/"); // Redirect after successful creation
   } catch (error) {
     console.error(error);
     return json({ error: "Failed to create item" }, { status: 500 });
@@ -77,6 +94,9 @@ const CreateItem: React.FC = () => {
       <Form method="post" encType="multipart/form-data" className="space-y-6">
         {actionData?.error && (
           <p className="text-red-500 text-sm">{actionData.error}</p>
+        )}
+        {actionData?.success && (
+          <p className="text-green-500 text-sm">{actionData.success}</p>
         )}
 
         {/* Product Name */}
@@ -170,7 +190,6 @@ const CreateItem: React.FC = () => {
             <option value="Lyulin">Lyulin</option>
             <option value="Druzhba">Druzhba</option>
             <option value="Nadezhda">Nadezhda</option>
-            {/* Add more neighborhoods as needed */}
           </select>
         </div>
 
