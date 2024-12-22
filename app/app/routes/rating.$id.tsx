@@ -1,4 +1,4 @@
-import { ActionFunction, LoaderFunction, redirect } from "@remix-run/node";
+import { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { useLoaderData, Form, useActionData } from "@remix-run/react";
 import { useEffect } from "react";
 import { prisma } from "../../prisma/db.server";

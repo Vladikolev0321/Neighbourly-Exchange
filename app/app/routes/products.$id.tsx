@@ -1,9 +1,8 @@
 import { redirect, useLoaderData, useActionData, Form } from "@remix-run/react";
 import { json, LoaderFunction, ActionFunction } from "@remix-run/node";
 import { prisma } from "../../prisma/db.server";
-import { clerkClient } from "@clerk/clerk-sdk-node";
 import { SignedIn, useUser } from "@clerk/remix";
-import { getAuth, PhoneNumber, User } from "@clerk/remix/ssr.server";
+import { getAuth } from "@clerk/remix/ssr.server";
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
