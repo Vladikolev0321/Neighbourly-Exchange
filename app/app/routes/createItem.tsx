@@ -4,7 +4,7 @@ import { prisma } from "../../prisma/db.server"; // Adjust the path to your Pris
 import { Form, useActionData } from "@remix-run/react"; // For managing form submission states
 import { ItemStatus } from "@prisma/client";
 import { getAuth } from "@clerk/remix/ssr.server";
-
+import { neighborhoodsNames } from "./_index";
 interface ActionData {
   error: string;
   success: string; // Added success message for successful item creation
@@ -30,7 +30,7 @@ export const action = async (args:ActionFunctionArgs) => {
   const ownerId = 1; // Replace with actual ownerId, e.g., from session
   const categoryId = 1; // Set based on your app's logic
   const creatorName = "Your Name"; // Replace with the actual user's name if required
-
+  
   // Validate the required fields
   if (!name || !type || !creatorPhone || !neighborhood || !description) {
     return json({ error: "All fields are required!" }, { status: 400 });
@@ -196,11 +196,11 @@ const CreateItem: React.FC = () => {
             className="w-full border-b-2 border-blue-600 p-2 outline-none focus:border-gray-300"
           >
             <option value="">Select Neighborhood</option>
-            <option value="Mladost">Mladost</option>
-            <option value="Lozenets">Lozenets</option>
-            <option value="Lyulin">Lyulin</option>
-            <option value="Druzhba">Druzhba</option>
-            <option value="Nadezhda">Nadezhda</option>
+            {neighborhoodsNames.map((neighborhood) => (
+              <option key={neighborhood.id} value={neighborhood.id}>
+                {neighborhood.name}
+              </option>
+            ))}
           </select>
         </div>
 

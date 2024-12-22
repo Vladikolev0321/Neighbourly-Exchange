@@ -7,7 +7,7 @@ import Navbar from "../components/navbar";
 
 
 
-const neighborhoodsNames = [
+export const neighborhoodsNames = [
   { "id": 1, "name": "Сердика" },
   { "id": 2, "name": "Зона Б-5" },
   { "id": 3, "name": "Зона Б-18" },
