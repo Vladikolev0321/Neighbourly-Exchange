@@ -16,8 +16,13 @@ model User {
   name      String?
   createdAt DateTime @default(now())
   clerkUserId  String @unique
+  rating Int @default(0)
+  phoneNumber String?
 }
-
+enum ItemStatus {
+  AVAILABLE
+  DONE
+}
 model item {
   id          Int     @id @default(autoincrement())
   name        String
@@ -27,8 +32,11 @@ model item {
   creatorName String
   type         String   // Should hold values like "Item" or "Favor"
   imageUrl     String?  // Nullable to account for optional image upload
-  phone        String
+  creatorPhone  String
+  receiverPhone String
   neighborhood String
+  status       ItemStatus
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  clerkUserId String
 }

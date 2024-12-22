@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { ActionFunctionArgs, json, redirect } from "@remix-run/node"; // For handling the action
 import { prisma } from "../../prisma/db.server"; // Adjust the path to your Prisma setup
 import { Form, useActionData } from "@remix-run/react"; // For managing form submission states
+import { ItemStatus } from "@prisma/client";
+import { useAuth } from "@clerk/remix";
+import { getAuth } from "@clerk/remix/ssr.server";
 
 interface ActionData {
   error: string;
@@ -9,14 +12,20 @@ interface ActionData {
 }
 
 // Define the Action Function
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async (args:ActionFunctionArgs) => {
   // Parse the form data
-  const formData = await request.formData();
+  const {userId} = await getAuth(args);
+
+  if(!userId){
+    return(redirect("/sign-up"));
+  }
+
+  const formData = await args.request.formData();
 
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
   const type = formData.get("type") as string;
-  const phone = formData.get("phone") as string;
+  const creatorPhone = formData.get("phone") as string;
   const neighborhood = formData.get("neighborhood") as string;
   const image = formData.get("image") as File | null;
   const ownerId = 1; // Replace with actual ownerId, e.g., from session
@@ -24,7 +33,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const creatorName = "Your Name"; // Replace with the actual user's name if required
 
   // Validate the required fields
-  if (!name || !type || !phone || !neighborhood || !description) {
+  if (!name || !type || !creatorPhone || !neighborhood || !description) {
     return json({ error: "All fields are required!" }, { status: 400 });
   }
 
@@ -61,12 +70,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         name,
         description,
         type,
-        phone,
+        creatorPhone,
         neighborhood,
         imageUrl, // Store the image URL here
         ownerId,
         categoryId,
         creatorName,
+        status: ItemStatus.AVAILABLE,
+        receiverPhone:"",
+        clerkUserId: userId,
       },
     });
 
