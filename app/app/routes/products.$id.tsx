@@ -64,7 +64,7 @@ export const action: ActionFunction = async (args) => {
   const { params, request } = args;
   const { userId } = await getAuth(args);
   const { id } = params;
-  const user = await prisma.user.findUnique({ where: { id: userId ? parseInt(userId) : undefined } });
+  const user = await prisma.user.findFirst({ where: { clerkUserId: userId || undefined } });
   const formData = await request.formData();
   const actionType = formData.get("actionType");
   const receiverPhone = formData.get("receiverPhone");
@@ -105,9 +105,9 @@ export const action: ActionFunction = async (args) => {
       },
     });
 
+    console.log("Sending email to:", receiverPhone);
     try {
-      const userEmail = user?.email || "someFallbackEmail@example.com";
-      let receiver = await prisma.user.findFirst({
+      const receiver = await prisma.user.findFirst({
         where: {
           phoneNumber: receiverPhone.toString(),
         }
@@ -120,19 +120,16 @@ export const action: ActionFunction = async (args) => {
         receivereMail = user?.email|| "default@example.com";
       }
       
-
-      // We need a link to the "rate" page (e.g. /rate/:itemId)
-      // Construct a full URL, e.g. https://example.com/rate/123
-      // We'll pull the origin from the request or from an .env setting:
       const url = new URL(request.url);
       const origin = url.origin; // e.g. https://your-domain.com
       const ratingLink = `${origin}/rating/${item.id}`;
 
 
+      console.log("Sending email to:", receivereMail);
       
       await resend.emails.send({
-        from: "noreply@yourdomain.com", // Use a verified sender email
-        to: receivereMail || "denislazarov303@gmail.com",
+        from: "Acme <onboarding@resend.dev>", // Use a verified sender email
+        to: receivereMail || "denislazarov1@gmail.com", 
         subject: `Please rate the item: ${item.name}`,
         html: `
           <div>
@@ -176,79 +173,77 @@ export default function ProductPage() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex flex-col md:flex-row items-start gap-6">
-        {/* Product Image */}
-        <div className="w-full md:w-1/2 h-64 bg-gray-300 rounded-md overflow-hidden">
-          <img
-            src={item.imageUrl || defaultImage}
-            alt={item.name}
-            className="w-full h-full object-cover"
-          />
-        </div>
+      {/* Card-like container */}
+      <div className="bg-white shadow-md rounded-md p-6">
+        <div className="flex flex-col md:flex-row items-start md:items-stretch gap-6">
+          {/* Product Image */}
+          <div className="w-full md:w-1/2 h-96 bg-gray-300 rounded-md overflow-hidden">
+            <img
+              src={item.imageUrl || defaultImage}
+              alt={item.name}
+              className="w-full h-full object-fill"
+            />
+          </div>
 
-        {/* Product Details */}
-        <div className="w-full md:w-1/2 space-y-4">
-          <h1 className="text-3xl font-bold">{item.name}</h1>
-          <p className="text-gray-700">{item.description}</p>
-          <p className="text-gray-600">Phone Number: {item.creatorPhone}</p>
+          {/* Product Details */}
+          <div className="w-full md:w-1/2 space-y-4">
+            <h1 className="text-3xl font-bold text-gray-800">{item.name}</h1>
+            <p className="text-gray-700">{item.description}</p>
+            <p className="text-gray-600">
+              <span className="font-semibold">Phone Number:</span> {item.creatorPhone}
+            </p>
 
-          <SignedIn>
-            {/* Display Actions Only for the Product Creator */}
-            {isCreator && (
-              <div className="space-y-4">
-                {actionData?.error && (
-                  <p className="text-red-600">{actionData.error}</p>
-                )}
+            <SignedIn>
+              {/* Display Actions Only for the Product Creator */}
+              {isCreator && (
+                <div className="space-y-4 pt-2">
+                  {actionData?.error && (
+                    <p className="text-red-600">{actionData.error}</p>
+                  )}
 
-                {/* Delete Form */}
-                <Form method="post">
-                  <input
-                    type="hidden"
-                    name="actionType"
-                    value="delete"
-                  />
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    Изтрий продукта/услугата
-                  </button>
-                </Form>
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                    {/* Delete Form */}
+                    <Form method="post">
+                      <input type="hidden" name="actionType" value="delete" />
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                      >
+                        Изтрий продукта/услугата
+                      </button>
+                    </Form>
 
-                {/* Mark as Done Form */}
-                <Form method="post" className="space-y-2">
-                  {/* Hidden field to designate the action */}
-                  <input
-                    type="hidden"
-                    name="actionType"
-                    value="markDone"
-                  />
+                    {/* Mark as Done Form */}
+                    <Form method="post" className="space-y-2 w-full md:w-auto">
+                      <input type="hidden" name="actionType" value="markDone" />
 
-                  <div>
-                    <label
-                      htmlFor="receiverPhone"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Въведете номера на получателя:
-                    </label>
-                    <input
-                      type="text"
-                      id="receiverPhone"
-                      name="receiverPhone"
-                      className="mt-1 block w-full p-2 border rounded-md"
-                    />
+                      <div>
+                        <label
+                          htmlFor="receiverPhone"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Въведете номера на получателя:
+                        </label>
+                        <input
+                          type="text"
+                          id="receiverPhone"
+                          name="receiverPhone"
+                          className="mt-1 block w-full p-2 border rounded-md"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                      >
+                        Маркирай сделката като завършена
+                      </button>
+                    </Form>
                   </div>
-
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                  >
-                    Маркирай сделката като завършена
-                  </button>
-                </Form>
-              </div>
-            )}
-          </SignedIn>
+                </div>
+              )}
+            </SignedIn>
+          </div>
         </div>
       </div>
     </div>

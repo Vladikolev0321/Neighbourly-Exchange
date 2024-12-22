@@ -3,7 +3,6 @@ import { ActionFunctionArgs, json, redirect } from "@remix-run/node"; // For han
 import { prisma } from "../../prisma/db.server"; // Adjust the path to your Prisma setup
 import { Form, useActionData } from "@remix-run/react"; // For managing form submission states
 import { ItemStatus } from "@prisma/client";
-import { useAuth } from "@clerk/remix";
 import { getAuth } from "@clerk/remix/ssr.server";
 
 interface ActionData {

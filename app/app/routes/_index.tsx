@@ -20,7 +20,7 @@ type LoaderData = {
     id: string;
     email: string;
     username: string;
-    phoneNumber:string;
+    phoneNumber: string;
   } | null;
   items: Array<{
     id: string;
@@ -33,11 +33,11 @@ type LoaderData = {
   }>;
 };
 
-export const  loader: LoaderFunction = async(args) => {
+export const loader: LoaderFunction = async (args) => {
   const { userId } = await getAuth(args);
   const items = await prisma.item.findMany({
     where: {
-      status:"AVAILABLE",
+      status: "AVAILABLE",
     },
     orderBy: {
       createdAt: "desc",
@@ -47,10 +47,10 @@ export const  loader: LoaderFunction = async(args) => {
 
   // Fetch detailed user info from Clerk
   if (!userId) {
-    return {items}; 
+    return { items };
   }
   const clerkUser = await clerkClient.users.getUser(userId);
-  
+
   // Check if user already exists in our DB
   let user = await prisma.user.findUnique({
     where: {
@@ -70,8 +70,7 @@ export const  loader: LoaderFunction = async(args) => {
     });
   }
   console.log(user.phoneNumber);
-  if(!user.phoneNumber && user)
-  {
+  if (!user.phoneNumber && user) {
     return redirect("/phoneNumberForm");
   }
 
@@ -202,41 +201,41 @@ const Home: React.FC<Props> = () => {
             Kitchen
           </button>
         </div>
-        
+
         <h2 className="mt-4 text-lg font-bold text-gray-600">Last Added</h2>
-        
+
 
         <div className="mt-4">
           <h2 className="text-xl font-semibold mb-4">Last Added Items</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-  {items && items.length > 0 ? (
-    items.map((item) => (
-      <div 
-        key={item.id} 
-        className="border p-4 rounded shadow bg-white"
-      >
-        <Link 
-            to={`/products/${item.id}`} 
-            key={item.id} 
-            className="border p-4 rounded shadow bg-white"
-          ></Link>
-        <div className="w-full h-64 bg-gray-300 rounded-md overflow-hidden">
-          <img
-            src={item.imageUrl || defaultImage}
-            alt={item.name}
-            className="w-full h-full object-cover"
-            onError={(e) => (e.currentTarget.src = defaultImage)}
-          />
-        </div>
-        <h3 className="text-lg font-bold mt-2">{item.name}</h3>
-        <p className="text-gray-700">{item.description}</p>
-        {/* Add other item details as needed */}
-      </div>
-    ))
-  ) : (
-    <p>No items available.</p>
-  )}
-</div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
+            {items && items.length > 0 ? (
+              items.map((item) => (
+                <div
+                  key={item.id}
+                  className="border p-4 rounded shadow bg-white"
+                >
+                  {/* Wrap everything in the Link so the card is clickable */}
+                  <Link
+                    to={`/products/${item.id}`}
+                    className="block"
+                  >
+                    <div className="w-full h-64 bg-gray-300 rounded-md overflow-hidden">
+                      <img
+                        src={item.imageUrl || defaultImage}
+                        alt={item.name}
+                        className="w-full h-full object-fill"
+                        onError={(e) => (e.currentTarget.src = defaultImage)}
+                      />
+                    </div>
+                    <h3 className="text-lg font-bold mt-2">{item.name}</h3>
+                    <p className="text-gray-700">{item.description}</p>
+                  </Link>
+                </div>
+              ))
+            ) : (
+              <p>No items available.</p>
+            )}
+          </div>
 
         </div>
       </section>
