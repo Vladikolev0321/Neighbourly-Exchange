@@ -3,7 +3,7 @@ import { ActionFunctionArgs, json, redirect } from "@remix-run/node"; // For han
 import { prisma } from "../../prisma/db.server"; // Adjust the path to your Prisma setup
 import { Form, useActionData } from "@remix-run/react"; // For managing form submission states
 import { ItemStatus } from "@prisma/client";
-import { getAuth } from "@clerk/remix/ssr.server";
+import { getAuth, User } from "@clerk/remix/ssr.server";
 import { neighborhoodsNames } from "./_index";
 interface ActionData {
   error: string;
@@ -13,11 +13,15 @@ interface ActionData {
 // Define the Action Function
 export const action = async (args:ActionFunctionArgs) => {
   // Parse the form data
-  const {userId} = await getAuth(args);
-
-  if(!userId){
-    return(redirect("/sign-up"));
+  const {userId:clerkUserId} = await getAuth(args);
+  if (!clerkUserId) {
+    return redirect("/sign-up");
   }
+
+  const user = await prisma.user.findUnique({
+    where: { clerkUserId: clerkUserId as string },
+  });
+  
 
   const formData = await args.request.formData();
 
@@ -27,7 +31,7 @@ export const action = async (args:ActionFunctionArgs) => {
   const creatorPhone = formData.get("phone") as string;
   const neighborhood = formData.get("neighborhood") as string;
   const image = formData.get("image") as File | null;
-  const ownerId = 1; // Replace with actual ownerId, e.g., from session
+  const ownerId = user?.id ?? 0; // Replace with actual ownerId, e.g., from session
   const categoryId = 1; // Set based on your app's logic
   const creatorName = "Your Name"; // Replace with the actual user's name if required
   
@@ -77,10 +81,11 @@ export const action = async (args:ActionFunctionArgs) => {
         creatorName,
         status: ItemStatus.AVAILABLE,
         receiverPhone:"",
-        clerkUserId: userId,
+        clerkUserId: clerkUserId,
       },
     });
 
+    //console.log("USERID:",userId)
     // Redirect to a success page or items list
     return redirect("/"); // Redirect after successful creation
   } catch (error) {

@@ -49,7 +49,6 @@ export const loader: LoaderFunction = async (args) => {
   }
 
 
-  // Fetch detailed user info from Clerk
   if (!userId) {
     return { items };
   }
@@ -78,7 +77,6 @@ export const loader: LoaderFunction = async (args) => {
     return redirect("/phoneNumberForm");
   }
 
-  // Return both sets of data
   return { user, items };
 
 }
@@ -88,14 +86,9 @@ const Home: React.FC<Props> = () => {
   const { items } = useLoaderData<LoaderData>();
   return (
     <div className="font-sans text-gray-900">
-      {/* Header */}
       <Navbar />
-      {/* Search & Categories */}
       <section className="mx-auto w-11/12 py-10">
-
         <h2 className="mt-4 text-lg font-bold text-gray-600">Last Added</h2>
-
-
         <div className="mt-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
             {items && items.length > 0 ? (
@@ -104,7 +97,6 @@ const Home: React.FC<Props> = () => {
                   key={item.id}
                   className="border p-4 rounded shadow bg-white"
                 >
-                  {/* Wrap everything in the Link so the card is clickable */}
                   <Link
                     to={`/products/${item.id}`}
                     className="block"

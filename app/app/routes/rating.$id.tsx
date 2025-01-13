@@ -4,48 +4,77 @@ import { useEffect } from "react";
 import { prisma } from "../../prisma/db.server";
 
 export const loader: LoaderFunction = async ({ params }) => {
-  const itemId = params.id;
-  // fetch the item to display or verify it exists
-  const item = await prisma.item.findUnique({ where: { id: parseInt(itemId!) } });
+  const itemId = parseInt(params.id!, 10);
+
+  // Validate the itemId is a valid number
+  if (isNaN(itemId)) {
+    throw new Response("Invalid item ID", { status: 400 });
+  }
+
+  // Fetch the item by ID
+  const item = await prisma.item.findUnique({
+    where: { id: itemId },
+  });
+
   if (!item) {
     throw new Response("Item not found", { status: 404 });
   }
+
   return { item };
 };
 
 export const action: ActionFunction = async ({ request, params }) => {
   const formData = await request.formData();
-  const ratingValue = formData.get("rating");
-  const itemId = parseInt(params.id!);
+  const ratingValue = parseInt(formData.get("rating") as string, 10);
+  const itemId = parseInt(params.id!, 10);
 
-  const currItem = await prisma.item.findFirst({ where: { id: itemId } });
+  if (isNaN(itemId) || isNaN(ratingValue) || ratingValue < 1 || ratingValue > 5) {
+    throw new Response("Invalid input", { status: 400 });
+  }
+
+  const currItem = await prisma.item.findUnique({
+    where: { id: itemId },
+  });
+
   if (!currItem) {
     throw new Response("Item not found", { status: 404 });
   }
 
-  let receiveRatingUserId = 0;
-  console.log("Item type:", currItem.type);
+  let receiveRatingUserId: number | null = null;
+
   if (currItem.type === "Item") {
-    console.log("Item is an item; owner:", currItem.ownerId);
+    // Use ownerId if the type is "Item"
     receiveRatingUserId = currItem.ownerId;
-  } else {
-    // If the item is a service, get the user who requested the service
-    const user = await prisma.user.findFirst({ where: { phoneNumber: currItem.receiverPhone } });
-    receiveRatingUserId = user?.id ?? 0;
+  } else if (currItem.type === "Favor") {
+    // Fetch user by receiverPhone if the type is "Favor"
+    const receiver = await prisma.user.findFirst({
+      where: { phoneNumber: currItem.receiverPhone },
+    });
+    receiveRatingUserId = receiver?.id || null;
   }
 
-  // Fetch the user to update the rating
-  const user = await prisma.user.findFirst({ where: { id: currItem.ownerId } });
+  if (!receiveRatingUserId) {
+    throw new Response("User to receive rating not found", { status: 404 });
+  }
 
-  // Update the user's rating (this is just an example of how you might do it)
-  await prisma.user.update({
+  const receivingUser = await prisma.user.findUnique({
     where: { id: receiveRatingUserId },
-    data: {
-      rating: (parseInt(ratingValue as string) + (user?.rating || 0)) / 2,
-    },
   });
 
-  // Return a flag to the client so it knows to show the success message
+  if (!receivingUser) {
+    throw new Response("Receiving user not found", { status: 404 });
+  }
+
+  const updatedRating =
+    receivingUser.rating !== 0
+      ? (receivingUser.rating + ratingValue) / 2
+      : ratingValue;
+
+  await prisma.user.update({
+    where: { id: receiveRatingUserId },
+    data: { rating: updatedRating },
+  });
+
   return { success: true };
 };
 

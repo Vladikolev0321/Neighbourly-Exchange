@@ -2,6 +2,7 @@
 import React from "react";
 import { Link } from "@remix-run/react";
 import {
+  Protect,
   SignedIn,
   SignedOut,
   SignInButton,
@@ -21,7 +22,6 @@ const Navbar: React.FC = () => {
           </Link>
         </div>
 
-        {/* Links */}
         <div className="flex items-center space-x-6">
           <Link
             to="/createItem"
@@ -29,9 +29,30 @@ const Navbar: React.FC = () => {
           >
             Направи обява
           </Link>
-        </div>
 
-        {/* Authentication Buttons */}
+          <Protect 
+          condition={(has) => has({ role: 'org:admin' })}>
+            <Link
+            to="/adminPanel"
+            className="px-4 py-2 rounded hover:bg-blue-500 transition"
+          >
+            Админ панел
+          </Link>
+          </Protect>
+        </div>
+        <Protect 
+          condition={(has) => has({ role: 'org:admin' })}>
+          <div className="flex items-center space-x-6">
+            <Link
+            to="/createItem"
+            className="px-4 py-2 rounded hover:bg-blue-500 transition"
+          >
+            Админ панел
+          </Link>
+          </div>
+        </Protect>
+       
+
         <div className="flex items-center space-x-4">
           <SignedIn>
             <UserButton />
