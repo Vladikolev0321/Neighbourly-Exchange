@@ -40,6 +40,7 @@ export const loader: LoaderFunction = async (args) => {
     },
   });
 
+   console.log("ITEMS",items);
   if (neighborhoods) {
     const neighborhoodIds = neighborhoods.split(",").map(Number);
     console.log("ids", neighborhoodIds);

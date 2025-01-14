@@ -230,13 +230,17 @@ export const loader: LoaderFunction = async () => {
 
 export default function NeighborhoodsPage() {
   const data = useLoaderData<typeof neighborhoods>();
-  const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<number[]>([]);
-  const [isClient, setIsClient] = useState(false);
   const navigate = useNavigate();
 
-  // Check if we are in the client environment
+  // Track selected neighborhoods
+  const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<number[]>([]);
+
+  // Flag to ensure we only load the map in the client environment
+  const [isClient, setIsClient] = useState(false);
+
   useEffect(() => {
-    setIsClient(typeof window !== "undefined");
+    // Set once on mount
+    setIsClient(true);
   }, []);
 
   const handleNeighborhoodClick = (id: number) => {
@@ -249,9 +253,10 @@ export default function NeighborhoodsPage() {
     setSelectedNeighborhoods((prev) => prev.filter((neighId) => neighId !== id));
   };
 
+  // Basic text filter for the left-hand list
   const filterNeighborhoods = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value.toLowerCase();
-    const listItems = document.querySelectorAll("#neighborhoodList li");
+    const listItems = document.querySelectorAll<HTMLButtonElement>("#neighborhoodList button");
 
     listItems.forEach((item) => {
       const text = item.textContent?.toLowerCase() || "";
@@ -264,19 +269,20 @@ export default function NeighborhoodsPage() {
       alert("Please select at least one neighborhood.");
       return;
     }
-    
+
     const queryParams = new URLSearchParams({
       neighborhoods: selectedNeighborhoods.join(","),
     }).toString();
-  
+
     navigate(`/catalog?${queryParams}`);
   };
+
   return (
     <div>
       <Navbar />
       <div className="container mx-auto p-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Select Neighborhood */}
+          {/* Select Neighborhood (Left Panel) */}
           <div className="bg-white p-4 rounded shadow h-[500px]">
             <h3 className="text-xl font-bold mb-4">Select Neighborhood</h3>
             <input
@@ -290,8 +296,11 @@ export default function NeighborhoodsPage() {
               {data.map((neighborhood) => (
                 <button
                   key={neighborhood.id}
-                  className={`w-full text-left p-2 rounded cursor-pointer bg-gray-100 hover:bg-blue-500 hover:text-white ${selectedNeighborhoods.includes(neighborhood.id) ? "bg-green-500 text-white" : ""
-                    }`}
+                  className={`w-full text-left p-2 rounded cursor-pointer bg-gray-100 hover:bg-blue-500 hover:text-white ${
+                    selectedNeighborhoods.includes(neighborhood.id)
+                      ? "bg-green-500 text-white"
+                      : ""
+                  }`}
                   onClick={() => handleNeighborhoodClick(neighborhood.id)}
                 >
                   {neighborhoodsNames.find((n) => n.id === neighborhood.id)?.name}
@@ -300,8 +309,8 @@ export default function NeighborhoodsPage() {
             </ul>
           </div>
 
-          {/* Map Section */}
-          <div className="bg-white p-4 rounded shadow h-[500px]">
+          {/* Map Section (Middle Panel) */}
+          <div className="bg-white p-4 rounded shadow h-[500px] relative overflow-hidden">
             <h3 className="text-xl font-bold mb-4">Map</h3>
             {isClient && (
               <MapComponent
@@ -312,7 +321,7 @@ export default function NeighborhoodsPage() {
             )}
           </div>
 
-          {/* Remove Neighborhoods */}
+          {/* Remove Neighborhoods (Right Panel) */}
           <div className="bg-white p-4 rounded shadow h-[500px]">
             <h3 className="text-xl font-bold mb-4">Remove Neighborhoods</h3>
             <ul className="space-y-2 h-[350px] overflow-y-auto">

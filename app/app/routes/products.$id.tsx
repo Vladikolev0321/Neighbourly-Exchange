@@ -1,7 +1,7 @@
 import { redirect, useLoaderData, useActionData, Form } from "@remix-run/react";
 import { json, LoaderFunction, ActionFunction } from "@remix-run/node";
 import { prisma } from "../../prisma/db.server";
-import { ClerkApp, Protect, SignedIn, useUser } from "@clerk/remix";
+import { ClerkApp, Protect, SignedIn, useUser, useOrganization } from "@clerk/remix";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { Resend } from 'resend';
 import Navbar from "~/components/navbar";
@@ -33,6 +33,8 @@ export const loader: LoaderFunction = async (args) => {
   const { params } = args;
   const { id } = params;
   const { userId } = await getAuth(args);
+ 
+
 
   const item = await prisma.item.findUnique({
     where: { id: parseInt(id!) },
@@ -75,9 +77,9 @@ export const action: ActionFunction = async (args) => {
     throw new Response("Product not found", { status: 404 });
   }
 
-  if (item.clerkUserId !== userId) {
-    throw new Response("Unauthorized", { status: 403 });
-  }
+  // if (item.clerkUserId !== userId) {
+  //   throw new Response("Unauthorized", { status: 403 });
+  // }
 
   if (actionType === "delete") {
     await prisma.item.delete({
@@ -148,78 +150,83 @@ export const action: ActionFunction = async (args) => {
 
 export default function ProductPage() {
   const { user } = useUser();
-  const { item, userId, clerkUserId, creator } = useLoaderData<LoaderData & { creator: { rating: number; name: string } }>();
+  const { item, userId, clerkUserId, creator } = useLoaderData<
+    LoaderData & { creator: { rating: number; name: string } }
+  >();
 
   const actionData = useActionData<{ error?: string }>();
-  const isCreator = userId === clerkUserId;
+  const isCreator = item.clerkUserId === clerkUserId;
 
   return (
-    
-    <div className="p-6">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="max-w-none bg-white shadow-md rounded-md p-6">
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="flex h-500 bg-gray-300 rounded-md overflow-hidden">
-            <img
-              src={item.imageUrl || defaultImage}
-              alt={item.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          
-          <div className="flex-grow space-y-4">
-            <h1 className="text-3xl font-bold text-gray-800">{item.name}</h1>
-            <p className="text-gray-700">{item.description}</p>
-            <p className="text-gray-600">
-              <span className="font-semibold">Създател на обявата:</span> {creator?.name || "Unknown"}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-semibold">Оценка на създателя:</span> {creator?.rating || "Not rated yet"} / 5
-            </p>
+      <div className="container mx-auto p-6">
+        <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
+          <div className="flex flex-col md:flex-row gap-8">
+            {/* Image Section */}
+            <div className="h-96 w-full md:w-96 bg-gray-200 rounded-lg overflow-hidden">
+              <img
+                src={item.imageUrl || defaultImage}
+                alt={item.name}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+              />
+            </div>
 
-            <SignedIn>
-            <Protect condition={(has) => has({ role: 'org:admin' }) || isCreator}>
+            {/* Details Section */}
+            <div className="flex-grow space-y-4">
+              <h1 className="text-4xl font-bold text-gray-800">{item.name}</h1>
+              <p className="text-gray-700">{item.description}</p>
+              <p className="text-gray-600">
+                <span className="font-semibold">Оценка на създателя:</span>{" "}
+                {creator?.rating || "Not rated yet"} / 5
+              </p>
 
-                <div className="space-y-4">
-                  {actionData?.error && (
-                    <p className="text-red-600">{actionData.error}</p>
-                  )}
-                  <Form method="post">
-                    <input type="hidden" name="actionType" value="delete" />
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 w-full"
-                    >
-                      Изтрий продукта/услугата
-                    </button>
-                  </Form>
+              <SignedIn>
+                <Protect condition={(has) => has({ role: "org:admin" }) || isCreator}>
+                  <div className="space-y-6">
+                    {actionData?.error && (
+                      <p className="text-red-500 font-medium">{actionData.error}</p>
+                    )}
 
-                  <Form method="post">
-                    <input type="hidden" name="actionType" value="markDone" />
-                    <div>
-                      <label
-                        htmlFor="receiverPhone"
-                        className="block text-sm font-medium text-gray-700"
+                    {/* Delete Button */}
+                    <Form method="post">
+                      <input type="hidden" name="actionType" value="delete" />
+                      <button
+                        type="submit"
+                        className="w-full px-6 py-3 bg-red-500 text-white font-semibold rounded-md hover:bg-red-600 transition-colors"
                       >
-                        Въведете номера на получателя:
-                      </label>
-                      <input
-                        type="text"
-                        id="receiverPhone"
-                        name="receiverPhone"
-                        className="w-full p-2 border rounded-md"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 w-full"
-                    >
-                      Маркирай сделката като завършена
-                    </button>
-                  </Form>
-                </div>
-              </Protect>
-            </SignedIn>
+                        Изтрий продукта/услугата
+                      </button>
+                    </Form>
+
+                    {/* Mark as Done Form */}
+                    <Form method="post">
+                      <input type="hidden" name="actionType" value="markDone" />
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="receiverPhone"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Въведете номера на получателя:
+                        </label>
+                        <input
+                          type="text"
+                          id="receiverPhone"
+                          name="receiverPhone"
+                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="mt-4 w-full px-6 py-3 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 transition-colors"
+                      >
+                        Маркирай сделката като завършена
+                      </button>
+                    </Form>
+                  </div>
+                </Protect>
+              </SignedIn>
+            </div>
           </div>
         </div>
       </div>

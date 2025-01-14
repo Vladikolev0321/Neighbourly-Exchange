@@ -22,7 +22,7 @@ export const action = async (args:ActionFunctionArgs) => {
     where: { clerkUserId: clerkUserId as string },
   });
   
-
+  console.log("OWNER ID",user);
   const formData = await args.request.formData();
 
   const name = formData.get("name") as string;
@@ -31,7 +31,7 @@ export const action = async (args:ActionFunctionArgs) => {
   const creatorPhone = formData.get("phone") as string;
   const neighborhood = formData.get("neighborhood") as string;
   const image = formData.get("image") as File | null;
-  const ownerId = user?.id ?? 0; // Replace with actual ownerId, e.g., from session
+  const ownerId = user?.id??0; // Replace with actual ownerId, e.g., from session
   const categoryId = 1; // Set based on your app's logic
   const creatorName = "Your Name"; // Replace with the actual user's name if required
   
@@ -97,6 +97,7 @@ export const action = async (args:ActionFunctionArgs) => {
 const CreateItem: React.FC = () => {
   const actionData = useActionData<ActionData>();
 
+  
   const [type, setType] = useState<string>("");
 
   const handleTypeChange = (selectedType: string) => {

@@ -9,9 +9,20 @@ import {
   SignOutButton,
   SignUpButton,
   UserButton,
+  useOrganization,
+  useOrganizationList
 } from "@clerk/remix";
+import { links } from "~/root";
 
 const Navbar: React.FC = () => {
+  const { organization, membership } = useOrganization();
+  const isAdmin = membership?.role === ("org:admin");
+  console.log("Is it Admin", isAdmin, membership);
+    const { isLoaded, setActive, userMemberships } = useOrganizationList({
+      userMemberships: true,
+    });
+  
+   
   return (
     <header className="bg-blue-600 shadow">
       <nav className="container mx-auto flex items-center justify-between p-4 text-white">
@@ -21,6 +32,8 @@ const Navbar: React.FC = () => {
             Neighborhood Exchange
           </Link>
         </div>
+ 
+        
 
         <div className="flex items-center space-x-6">
           <Link
@@ -29,28 +42,12 @@ const Navbar: React.FC = () => {
           >
             Направи обява
           </Link>
-
-          <Protect 
-          condition={(has) => has({ role: 'org:admin' })}>
-            <Link
-            to="/adminPanel"
-            className="px-4 py-2 rounded hover:bg-blue-500 transition"
-          >
-            Админ панел
-          </Link>
-          </Protect>
         </div>
-        <Protect 
-          condition={(has) => has({ role: 'org:admin' })}>
-          <div className="flex items-center space-x-6">
-            <Link
-            to="/createItem"
-            className="px-4 py-2 rounded hover:bg-blue-500 transition"
-          >
-            Админ панел
-          </Link>
+        <div className="flex items-center space-x-6">
+          <ul>
+          {isAdmin && <li><a href="/adminPanel">Админ панел</a></li>}
+          </ul>
           </div>
-        </Protect>
        
 
         <div className="flex items-center space-x-4">
