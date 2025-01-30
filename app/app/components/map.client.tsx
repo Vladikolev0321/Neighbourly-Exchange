@@ -18,9 +18,7 @@ export default function MapComponent({
   const mapInstanceRef = useRef<L.Map | null>(null);
   const neighborhoodPolygons = useRef<{ [id: number]: L.Polygon }>({});
 
-  // Initialize the Leaflet map on first mount
   useEffect(() => {
-    // Only run in the client environment
     if (typeof window !== "undefined" && mapRef.current && !mapInstanceRef.current) {
       const mapInstance = L.map(mapRef.current).setView([42.6975, 23.3242], 12);
       mapInstanceRef.current = mapInstance;
@@ -38,24 +36,20 @@ export default function MapComponent({
           fillColor: "#3388ff",
           fillOpacity: 0.2,
           interactive: true,
-          // Tailwind class to show pointer on hover
           className: "cursor-pointer",
         });
 
         polygon.addTo(mapInstance);
         polygon.on("click", () => onNeighborhoodClick(neighborhood.id));
 
-        // Store reference so we can update later
         neighborhoodPolygons.current[neighborhood.id] = polygon;
       });
 
-      // Optional: Invalidate size after a short delay to ensure correct sizing
       setTimeout(() => {
         mapInstance.invalidateSize();
       }, 200);
     }
 
-    // Cleanup on unmount
     return () => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
@@ -64,7 +58,6 @@ export default function MapComponent({
     };
   }, [data, onNeighborhoodClick]);
 
-  // Update polygon style when selectedNeighborhoods changes
   useEffect(() => {
     Object.entries(neighborhoodPolygons.current).forEach(([id, polygon]) => {
       const isSelected = selectedNeighborhoods.includes(Number(id));

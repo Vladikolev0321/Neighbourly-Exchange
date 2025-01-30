@@ -26,7 +26,6 @@ const Navbar: React.FC = () => {
   return (
     <header className="bg-blue-600 shadow">
       <nav className="container mx-auto flex items-center justify-between p-4 text-white">
-        {/* Logo */}
         <div className="flex items-center space-x-4">
           <Link to="/" className="text-2xl font-bold hover:text-blue-300">
             Neighborhood Exchange

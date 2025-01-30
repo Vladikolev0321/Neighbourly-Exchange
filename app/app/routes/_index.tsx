@@ -223,7 +223,6 @@ export const neighborhoodsNames = [
   { "id": 213, "name": "СПЗ Слатина" }
 
 ];
-// Loader to fetch neighborhood data
 export const loader: LoaderFunction = async () => {
   return json(neighborhoods);
 };
@@ -232,10 +231,8 @@ export default function NeighborhoodsPage() {
   const data = useLoaderData<typeof neighborhoods>();
   const navigate = useNavigate();
 
-  // Track selected neighborhoods
   const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<number[]>([]);
 
-  // Flag to ensure we only load the map in the client environment
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -253,7 +250,6 @@ export default function NeighborhoodsPage() {
     setSelectedNeighborhoods((prev) => prev.filter((neighId) => neighId !== id));
   };
 
-  // Basic text filter for the left-hand list
   const filterNeighborhoods = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value.toLowerCase();
     const listItems = document.querySelectorAll<HTMLButtonElement>("#neighborhoodList button");
